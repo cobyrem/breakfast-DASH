@@ -100,16 +100,20 @@ Python 3.10
 18. Select aws-elasticbeanstalk-service-role under Existing service roles
 19. Select aws-elasticbeanstalk-ec2-role under EC2 Instance profile
     If this role does not exist, utilize these instructions to create the role and attach the following policies in AWS IAM. You may or may not need to restart this process.
+
     https://docs.aws.amazon.com/elasticbeanstalk/latest/dg/iam-instanceprofile.html
+
     AWSElasticBeanstalkWebTier
+
     AWSElasticBeanstalkWorkerTier
+
     AWSElasticBeanstalkMulticontainerDocker
-20. Select next
-21. Select Skip to review or next throug the remaining pages
-22. Review configurations
-23. Select Submit
-24. Wait for AWS to to fully launch the environment. The Health Status should be green and say 'OK'
-25. Select Go to Environemnt to access the dash app.
+21. Select next
+22. Select Skip to review or next throug the remaining pages
+23. Review configurations
+24. Select Submit
+25. Wait for AWS to to fully launch the environment. The Health Status should be green and say 'OK'
+26. Select Go to Environemnt to access the dash app.
 
 ## Using the Web App
 Whether on a local server or hosted on AWS, here are some tips for using the dashboard:
