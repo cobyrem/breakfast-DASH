@@ -1,6 +1,5 @@
 import sqlite3
 import webbrowser
-from tabulate import tabulate
 from dash import Dash, html, dcc, callback, Output, Input, dash_table
 import plotly.express as px
 import pandas as pd
@@ -30,6 +29,8 @@ print(df2)
 
 
 app = Dash(__name__)
+app.scripts.config.serve_locally = True
+application = app.server
 
 app.layout = html.Div([
     html.H1(children='Reids Breafast-DASH(board)', style={'textAlign': 'center', 'color': '#008080'}),
@@ -55,6 +56,4 @@ def update_graph(upcharges):
     return fig1, fig2
 
 if __name__ == '__main__':
-
-    app.run(debug= False)
-    webbrowser.open_new("http://localhost:8050")  # Change the port if needed
+    application.run(debug=False, port=8080)
