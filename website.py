@@ -1,7 +1,7 @@
 import sqlite3
 import webbrowser
 from tabulate import tabulate
-from dash import Dash, html, dcc, callback, Output, Input
+from dash import Dash, html, dcc, callback, Output, Input, dash_table
 import plotly.express as px
 import pandas as pd
 
@@ -28,27 +28,31 @@ GROUP BY "FULL_DATE"
 """,con)
 print(df2)
 
-df = pd.read_csv('https://raw.githubusercontent.com/plotly/datasets/master/gapminder_unfiltered.csv')
 
 app = Dash(__name__)
 
 app.layout = html.Div([
     html.H1(children='Reids Breafast-DASH(board)', style={'textAlign': 'center', 'color': '#008080'}),
+    html.Div([dash_table.DataTable(df1.to_dict('records'), [{"name": i, "id": i} for i in df1.columns])]),
     html.Div([
         dcc.Checklist(options=[{'label': UP_CHARGE, 'value': UP_CHARGE} for UP_CHARGE in df1.NAME.unique()],inline = True,value=df1.NAME.unique(), id='dropdown-selection1'),
         dcc.Graph(id='graph-content1'),html.P('Future feature might include dynamically updating proportions depending on check marks. Not a very effective bar chart without the this feature. Dashboarding presents new issues compared to more static charts. Added to issues on GitHub')]
-        )
+        ),
+    html.Div([dcc.Graph(id='graph-content2')])
 ])
 
 @callback(
     Output('graph-content1', 'figure'),
+    Output('graph-content2', 'figure'),
     Input('dropdown-selection1', 'value'),
 )
 def update_graph(upcharges):
     dff1 = df1[df1.NAME.isin(upcharges)]
     fig1 = px.bar(dff1, x='NAME', y='PERCENTAGE',title='Proportion of item sales')
     fig1.update_layout(title_x=0.5)
-    return fig1
+    fig2 = px.line(df2,x = 'FULL_DATE', y = 'DAILY_GROSS_REVENUE', title = 'Daily Gross Revenue')
+    fig1.update_layout(title_x=0.5, yaxis_title = 'DAILY_GROSS_REVENUE ($)', xaxis_title = "FULL_DATE")
+    return fig1, fig2
 
 if __name__ == '__main__':
 
