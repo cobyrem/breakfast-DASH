@@ -49,8 +49,8 @@ app.layout = html.Div([
 )
 def update_graph(upcharges):
     dff1 = df1[df1.NAME.isin(upcharges)]
-    fig1 = px.bar(dff1, x='Food and Drink', y='Proportion of Sales',title='Proportion of item sales')
-    fig1.update_layout(title_x=0.5)
+    fig1 = px.bar(dff1, x='NAME', y='PERCENTAGE',title='Proportion of item sales')
+    fig1.update_layout(xaxis_title = 'Food and Drink Category', yaxis_title = 'Proportion of Sales', title_x=0.5)
     fig2 = px.line(df2,x = 'FULL_DATE', y = 'DAILY_GROSS_REVENUE', title = 'Daily Gross Revenue')
     fig2.update_layout(title_x=0.5, yaxis_title = 'DAILY_GROSS_REVENUE ($)', xaxis_title = "FULL_DATE")
     return fig1, fig2
