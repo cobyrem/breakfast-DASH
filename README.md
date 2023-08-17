@@ -53,10 +53,9 @@ Python 3.10
 ## Setup and Instructions (This setup can be automated/expedited in future releases)
 ### Database
 1. Open terminal window and type the following and press Enter after typing each command.
-2. 'sqlite3 reids.db < reids.sql' to create database from SQL DDL code
-3. 'python3.10 reids.py' to populate the database.
-4. 'ls | grep db' to confirm creation of reids.db. Alternatively use a file explorer to view that reids.db was created.
-5. View or query the database to ensure it is populated with data. 
+2. 'python3.10 reids.py' to create and populate the database.
+3. 'ls | grep db' to confirm creation of reids.db. Alternatively use a file explorer to view that reids.db was created.
+4. View or query the database to ensure it is populated with data. 
 ### Virtual Environment (venv)
 1. Open terminal window and type the following and press Enter after typing each command.
 1. 'python3.10 -m pip install --user virtualenv' to install virtualenv
