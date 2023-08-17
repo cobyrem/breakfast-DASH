@@ -1,6 +1,6 @@
 # Breakfast-DASH Dashboard
 
-Welcome to the Breakfast-DASH(board)! This interactive Dash application provides insights into a fictional breakfast stand named Reid's, which operates in a commercial downtown area from Monday to Friday, 8 am to 11 am. The stand offers a selection of drinks (coffee, tea, sodas) and food items (egg & sausage, oatmeal), catering to various dietary preferences including vegan and keto options. Reid's uses the Ordr Point of Sale (POS) system, utilizing the Ordr API to access order data.
+Welcome to the Breakfast-DASH(board)! This interactive Dash application provides insights into a fictional breakfast stand named Reid's, which operates in a commercial downtown area from Monday to Friday, 8 am to 11 am. The stand offers a selection of drinks (coffee, tea, sodas) and food items (egg & sausage, oatmeal), catering to various dietary preferences including vegan and keto options. Reid's uses the Ordr Point of Sale (POS) system, utilizing the Ordr API to access order data. The body of the Order API message is available in a JSON document.
 
 ## Access the Dashboard
 Explore the Breakfast-DASH dashboard through the following link: [Breakfast-DASH Dashboard](http://b-dash-iframe-env.eba-trun3m23.us-east-2.elasticbeanstalk.com)
