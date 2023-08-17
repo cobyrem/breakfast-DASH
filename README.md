@@ -80,7 +80,7 @@ Python 3.10
   application.run(debug=False, port=8080)
 4. 'pip freeze > requirements.txt' to create a text file with the programs and libraries required for the venv
 5. 'zip myfiles.zip requirements.txt application.py reids.db .ebextensions' to create a zip file of the files that will be uploaded via AWS Elastic Beanstalk
-### AWS Elastic Bean Stalk New Project
+### Deploy project via AWS Elastic Bean Stalk
 1. Log into AWS console, go to Elastic Beanstalk, and Select 'Create Application'
 2. Type an Application Name
 3. Select Create
