@@ -52,7 +52,7 @@ def update_graph(upcharges):
     fig1 = px.bar(dff1, x='NAME', y='PERCENTAGE',title='Proportion of item sales')
     fig1.update_layout(title_x=0.5)
     fig2 = px.line(df2,x = 'FULL_DATE', y = 'DAILY_GROSS_REVENUE', title = 'Daily Gross Revenue')
-    fig1.update_layout(title_x=0.5, yaxis_title = 'DAILY_GROSS_REVENUE ($)', xaxis_title = "FULL_DATE")
+    fig2.update_layout(title_x=0.5, yaxis_title = 'DAILY_GROSS_REVENUE ($)', xaxis_title = "FULL_DATE")
     return fig1, fig2
 
 if __name__ == '__main__':
