@@ -172,7 +172,7 @@ class PsolaVoice:
 
     def sing(self, midi, dur, staccato=False, with_consonant=True, rng=None):
         n = int(dur * SR)
-        out = np.zeros(n + 2000)
+        out = np.zeros(n + 4000)
         t = np.arange(n) / SR
         target = mtof(midi)
         # vibrato fades in on held notes; tiny scoop up at the start (operatic)
@@ -181,29 +181,33 @@ class PsolaVoice:
         scoop = -0.6 * np.exp(-t / 0.03) if dur > 0.2 and not staccato else 0 * t
         f = target * 2 ** ((vib + scoop) / 12)
 
-        cons = list(range(self.first, self.vowel_on)) if with_consonant and not staccato else []
-        cons_dur = 0.0
-        pos, i, k_loop, step_dir = 0.0, 0, 0, 1
+        # Walk through the source recording at its natural speed (consonant
+        # first, then ping-pong through the steady vowel). Each output period
+        # reuses the nearest source grain, so high notes repeat the same
+        # waveform cleanly instead of switching grains every cycle (= noise).
+        lo_t = self.marks[self.loop[0]]
+        hi_t = self.marks[self.loop[-1]]
+        use_cons = with_consonant and not staccato
+        src_t = float(self.marks[self.first] if use_cons else lo_t)
+        direction = 1.0
+        pos = 0.0
         while pos < n:
-            if i < len(cons):
-                k = cons[i]
-                i += 1
-            else:                                   # ping-pong through the vowel
-                k = self.loop[k_loop]
-                k_loop += step_dir
-                if k_loop >= len(self.loop) or k_loop < 0:
-                    step_dir *= -1
-                    k_loop += 2 * step_dir
-                if rng is not None and rng.random() < 0.15:  # de-buzz
-                    k_loop = int(np.clip(k_loop + rng.integers(-2, 3), 0, len(self.loop) - 1))
+            k = int(np.argmin(np.abs(self.marks - src_t)))
             g = self.grain(k)
             fi = f[min(int(pos), n - 1)]
             a = int(pos) - len(g) // 2
+            frac = pos - int(pos)
+            if a >= 0 and frac > 1e-6:                     # fractional delay
+                g = np.interp(np.arange(len(g) + 1) - frac, np.arange(len(g)), g, left=0, right=0)
             if a >= 0:
                 out[a:a + len(g)] += g * (self.P[k] * 2 * fi / SR) ** -1
-            pos += SR / fi
-            if i == len(cons) and cons and cons_dur == 0:
-                cons_dur = pos / SR
+            dt = SR / fi
+            pos += dt
+            src_t += direction * dt
+            if src_t > hi_t and src_t - direction * dt >= lo_t:
+                direction = -1.0
+            elif src_t < lo_t and direction < 0:
+                direction = 1.0
         out = out[:n]
         e = np.ones(n)
         a = int((0.006 if staccato else 0.025) * SR)
@@ -217,6 +221,31 @@ class PsolaVoice:
 
 
 # ================================================================ orchestra
+_TABLES = {}
+TABLE_N = 4096
+
+
+def bl_saw_table(f_max):
+    """Band-limited sawtooth: only harmonics below ~15 kHz at the highest
+    frequency it will be played at, so nothing aliases (no digital buzz)."""
+    nh = max(1, int(15000 / f_max))
+    if nh not in _TABLES:
+        t = np.arange(TABLE_N) / TABLE_N
+        k = np.arange(1, nh + 1)[:, None]
+        tab = (np.sin(2 * np.pi * k * t) / k).sum(axis=0)
+        _TABLES[nh] = tab / np.abs(tab).max()
+    return _TABLES[nh]
+
+
+def bl_osc(freq, phase0=0.0):
+    """Play a band-limited saw at a per-sample frequency array."""
+    tab = bl_saw_table(float(np.max(freq)))
+    idx = ((np.cumsum(freq) / SR + phase0) % 1.0) * TABLE_N
+    i0 = idx.astype(int)
+    fr = idx - i0
+    return tab[i0] * (1 - fr) + tab[(i0 + 1) % TABLE_N] * fr
+
+
 def harpsichord(midi, dur):
     n = int((dur + 0.6) * SR)
     t = np.arange(n) / SR
@@ -240,12 +269,11 @@ def strings(midi, dur, rng, attack=0.08, bright=4000, trem=False):
     x = np.zeros(n)
     for det in (-0.12, 0.0, 0.11):
         f = f0 * 2 ** ((det + 0.06 * np.sin(2 * np.pi * 5.2 * t + rng.uniform(0, 6))) / 12)
-        ph = np.cumsum(f) / SR + rng.uniform()
-        x += 2 * (ph % 1.0) - 1
+        x += bl_osc(f, rng.uniform())
     x = filt(filt(x, "lowpass", bright, 2), "highpass", 120, 2)
     e = np.minimum(1, t / attack) * np.where(t < dur, 1, np.exp(-(t - dur) / 0.08))
     if trem:
-        e *= 0.65 + 0.35 * (np.sin(2 * np.pi * 8 * t) > 0)
+        e *= 0.8 + 0.2 * np.sin(2 * np.pi * 7 * t)       # smooth, no chopping
     return x * e / 3
 
 
@@ -369,7 +397,7 @@ def build(src, bpm=132, seed=5):
             for m in voices:
                 for det in (-0.1, 0.1):
                     f = mtof(m) * 2 ** ((det + 0.15 * np.sin(2 * np.pi * 5 * tt + rng.uniform(0, 6))) / 12)
-                    car += 2 * ((np.cumsum(f) / SR + rng.uniform()) % 1) - 1
+                    car += bl_osc(f, rng.uniform())
             c = meh_choir(car)
             c = c / (np.abs(c).max() + 1e-9) * np.minimum(1, tt / 0.03) * np.minimum(1, (dd - tt) / 0.08)
             put(choir, c, t0 + beat_pos * beat, 1.0)
@@ -383,9 +411,7 @@ def build(src, bpm=132, seed=5):
     hall = np.column_stack([fftconvolve(send[:, c], reverb_ir(2.6, 7 + c))[:total] for c in range(2)])
     mix = dry + 0.55 * hall
     mix = np.column_stack([filt(mix[:, c], "highpass", 35, 2) for c in range(2)])
-    mix /= np.abs(mix).max()
-    mix = np.tanh(1.3 * mix) / np.tanh(1.3)
-    mix *= 0.95 / np.abs(mix).max()
+    mix *= 0.89 / np.abs(mix).max()                      # -1 dBFS, no clipping/saturation
     end = int(min(60.0, len(SOPRANO) * bar + 2.0) * SR)
     mix = mix[:end]
     fl = int(0.8 * SR)
